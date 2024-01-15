@@ -18,7 +18,7 @@ public class ASTMulDivMod extends SimpleNode {
       for (int i = 0; i < children.length; ++i) {
         SimpleNode n = (SimpleNode)children[i];
         if (n != null) {
-          n.dump(prefix + ((jjtGetValue()==null) ? "" : "  "));
+          n.dump(prefix + ((jjtGetValue()==null) ? "" : "|"));
         }
       }
     }
