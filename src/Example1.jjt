@@ -1,0 +1,245 @@
+options {
+  MULTI=true;
+  KEEP_LINE_COLUMN = true;
+}
+
+
+PARSER_BEGIN(Example1)
+
+/**
+ * An Arithmetic Grammar.
+ */
+
+import java.io.FileInputStream;
+public class Example1 {
+
+  /** Main entry point. */
+  public static void main(String args[]) {
+    System.out.println("Reading from standard input...");
+    try {
+        Example1 t = new Example1(new FileInputStream("../test.txt"));
+        try {
+          ASTStart n = t.Start();
+          n.dump("");
+          System.out.println("Thank you.");
+        } catch (Exception e) {
+          System.out.println("Oops.");
+          System.out.println(e.getMessage());
+          e.printStackTrace();
+        }
+    } catch (Exception e) {
+        System.out.println("Oops.");
+        System.out.println(e.getMessage());
+        e.printStackTrace();
+    }
+  }
+}
+
+
+PARSER_END(Example1)
+
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+| <"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">
+}
+
+TOKEN : /* LITERALS */
+{
+  < INTEGER_LITERAL:
+        <DECIMAL_LITERAL> (["l","L"])?
+      | <HEX_LITERAL> (["l","L"])?
+      | <OCTAL_LITERAL> (["l","L"])?
+  >
+|
+  < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
+|
+  < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+|
+  < #OCTAL_LITERAL: "0" (["0"-"7"])* >
+|
+  < STRING_LITERAL:
+  "\""(<LETTER>|<DIGIT>)*"\""|
+  "'"(<LETTER>|<DIGIT>)*"'"
+  >
+}
+
+TOKEN : /* TYPES */
+{
+    < INT: "int" >|
+    < STRING: "string" >|
+    < FLOAT: "float">|
+    < BOOLEAN: "boolean">
+}
+
+TOKEN : /* IDENTIFIERS */
+{
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+|
+  < #LETTER: ["_","a"-"z","A"-"Z"] >
+|
+  < #DIGIT: ["0"-"9"] >
+}
+
+
+
+/** Main production. */
+ASTStart Start() : {}
+{
+  (Line()";")*
+  { return jjtThis; }
+}
+
+void Line() #void : {}
+{
+    LOOKAHEAD(2)
+    VariableCreation()|
+    LOOKAHEAD(VariableAssignment()) VariableAssignment()|
+    Expression() //Only Expression
+
+}
+
+void VariableCreation() #void : {}
+{
+    (
+        (Identifier() | Type()) Identifier()
+    )#VarCreate
+}
+
+void VariableAssignment() #void : {}
+{
+    (
+        Identifier() "=" Value()
+    )#VarAssignment
+}
+
+/** An Expression. */
+void Expression() #void : {}
+{
+  LOOKAHEAD(2) Value() | AdditiveExpression()
+}
+
+/** An Additive Expression. */
+void AdditiveExpression() #void : {
+}
+{
+  (
+    MultiplicativeExpression() ( ["+" | "-"] MultiplicativeExpression() )*
+  )#Add(>1)
+}
+
+/** A Multiplicative Expression. */
+void MultiplicativeExpression() #void : {}
+{
+  (
+    UnaryExpression() ( ( "*" | "/" | "%" ) UnaryExpression() )*
+  )#Mult(>1)
+}
+
+/** A Unary Expression. */
+void UnaryExpression() #void : {}
+{
+  Value() | ("(" Expression() ")")
+}
+
+void Value() #void : {}
+{
+    LOOKAHEAD(2)
+    Integer() | FuncOrIden() //| String()
+}
+
+void Function() #void : {}
+{
+    (
+        Identifier() "("Parameters()")"
+    )#Function{
+        System.out.println("Function");
+
+}
+}
+
+void Parameters() : {}
+{
+    [Parameter()] ("," Parameter())*
+}
+
+void Parameter() : {}
+{
+    Type() Identifier()
+}
+
+void FuncOrIden() #void : {}
+{
+    //LOOKAHEAD(2)
+    LOOKAHEAD(Function()) Function() | Identifier(){
+        System.out.println("FuncOrIden");
+    }
+}
+
+
+/** An Identifier. */
+void Identifier() : {
+ Token t;
+}
+{
+  t=<IDENTIFIER>{
+    jjtThis.jjtSetValue(t.image);
+    System.out.println("Identifier");
+  }
+}
+
+/** An Integer. */
+void Integer() : {
+ Token t;
+}
+{
+  t=<INTEGER_LITERAL>{
+    jjtThis.jjtSetValue(t.image);
+  }
+}
+
+void StringValue() : {
+ Token t;
+}
+{
+  t=<STRING_LITERAL>{
+    jjtThis.jjtSetValue(t.image);
+  }
+}
+void Type() #void : {}
+{
+    IntType() | StringType() | FloatType() | BooleanType()
+}
+
+void IntType() #void : {}
+{
+    (
+        <INT>
+    )#Int
+}
+
+void StringType() #void : {}
+{
+    (
+        <STRING>
+    )#String
+}
+
+void FloatType() #void : {}
+{
+    (
+        <FLOAT>
+    )#Float
+}
+
+void BooleanType() #void : {}
+{
+    (
+        <BOOLEAN>
+    )#Boolean
+}

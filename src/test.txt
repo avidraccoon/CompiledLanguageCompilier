@@ -1,0 +1,6 @@
+
+//test + test;
+
+int dfs;
+dfs = 5;
+test(int test2);

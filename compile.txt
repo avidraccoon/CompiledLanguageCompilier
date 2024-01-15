@@ -1,0 +1,5 @@
+#In directory src/JavaCC
+
+jjtree ../Example1.jjt
+javacc Example1.jj
+javac Example1.java

@@ -1,0 +1,278 @@
+options {
+  MULTI=true;
+  KEEP_LINE_COLUMN = false;
+}
+
+
+PARSER_BEGIN(Parser)
+
+/**
+ * An Arithmetic Grammar.
+ */
+
+import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.io.InputStream;
+public class Parser {
+  public static ASTStart root;
+  /** Main entry point. */
+
+  public static void Parse(InputStream input) {
+    System.out.println("Reading from standard input...");
+    try {
+        Parser t = new Parser(input);
+        //t.printAllTokens();
+        try {
+          root = t.Start();
+          //root.dump("");
+          System.out.println("Thank you.");
+        } catch (Exception e) {
+          System.out.println("Oops.");
+          System.out.println(e.getMessage());
+          e.printStackTrace();
+          t.printAllTokens();
+        }
+    } catch (Exception e) {
+        System.out.println("Oops.");
+        System.out.println(e.getMessage());
+        //e.printStackTrace();
+    }
+  }
+
+  public void printAllTokens() throws ParseException {
+     Token t;
+     int limit = 10;
+     int count = 0;
+     do {
+         t = this.getNextToken();
+         System.out.println("Token: " + t.image + " Kind: " + t.kind + " Value:" + t.getValue() +
+         " ToString: " + t.toString());
+         count++;
+     } while (limit > count);
+  }
+}
+
+
+
+PARSER_END(Parser)
+
+
+//String Literal
+TOKEN :
+{
+ <STRING_LITERAL: "\"" (~["\"", "\\"] | "\\\"" | "\\\\")* "\"" >
+}
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+| <"/*" (~["*"])* "*" (~["/"] (~["*"])* "*")* "/">
+}
+
+TOKEN : /* other LITERALS */
+{
+  < INTEGER_LITERAL:
+        <DECIMAL_LITERAL> (["l","L"])?
+      | <HEX_LITERAL> (["l","L"])?
+      | <OCTAL_LITERAL> (["l","L"])?
+  >
+|
+  < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
+|
+  < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+|
+  < #OCTAL_LITERAL: "0" (["0"-"7"])* >
+}
+
+TOKEN :
+{
+  < END: ";">
+|
+  < BLOCK_START: "{">
+|
+  < BLOCK_END: "}">
+}
+
+TOKEN : /* Keywords */
+{
+    <FUNCTION: "function">
+|
+    <IF: "if">
+|
+    <ELSE: "else">
+|
+    <ELIF: "elif">
+|
+    <PRINT: "print">
+|
+    <PRINTF: "printf">
+|
+    <RANDOM: "random">
+|
+    <WHILE: "while">
+|
+    <RETURN: "return">
+|
+    <TRUE: "true">
+|
+    <FALSE: "false">
+}
+
+TOKEN : /* TYPES */
+{
+  < INT: "int">
+|
+  < FLOAT: "float">
+|
+  < STRING: "string">
+|
+  < BOOLEAN: "boolean">
+}
+
+TOKEN : /* Operators */
+{
+    < EQUAL : <ASSIGNMENT><ASSIGNMENT>>
+|
+    < NOT_EQUAL : "!=" >
+|
+    < LESS : "<" >
+|
+    < LESS_EQUAL : "<=" >
+|
+    < GREATER : ">" >
+|
+    < GREATER_EQUAL : ">=" >
+|
+    < ASSIGNMENT : "=">
+|
+    < NOT : "!" >
+|
+    < ADD : "+" >
+|
+    < SUB : "-" >
+|
+    < MUL : "*" >
+|
+    < DIV : "/" >
+|
+    < MOD : "%" >
+}
+
+TOKEN : /* IDENTIFIERS */
+{
+  < FUNC_IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* "(" >
+|
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+|
+  < #LETTER: ["_","a"-"z","A"-"Z"] >
+|
+  < #DIGIT: ["0"-"9"] >
+}
+
+
+
+
+ASTStart Start() : {}
+{
+  //<END>
+  //(Line())*
+  (Line())*
+  { return jjtThis; }
+}
+
+void Line() #void : {}
+{
+    LOOKAHEAD(2)
+    Var_Declar()
+|
+    Var_Assignment()
+|
+    (Function_Call() <END>)
+}
+
+void Block() : {}
+{
+     <BLOCK_START>(Line())*<BLOCK_END>
+}
+
+void Var_Declar() #void : {}
+{
+    ((Identifier() | <INT> | <BOOLEAN> | <FLOAT> | <STRING> ) Identifier()<END>)#Var_Declar
+}
+
+void Var_Assignment() #void : {}
+{
+    (Identifier() <ASSIGNMENT>Expression()#Value<END>)#Var_Assign
+}
+
+void Function_Call() : {
+    Token t;
+}
+{
+    (
+    t=<FUNC_IDENTIFIER>{jjtThis.jjtSetValue(t.image);}
+    Parameters()
+    ")"
+    )#FunctionCall
+}
+
+void Expression() #void : {}
+{
+    ArithmeticExpression()
+}
+
+void ArithmeticExpression() #void : {}
+{
+    (Term() ((<ADD>{jjtThis.jjtSetValue("Add");} | <SUB>{jjtThis.jjtSetValue("Sub");}) Term())*)#AddSub
+}
+
+void Term() #void : {}
+{
+ (Factor() ((<MUL> | <DIV> | <MOD>) Factor())*)#MulDivMod
+}
+
+void Factor() #void : {}
+{
+ Value()
+| (<"("> ArithmeticExpression() <")">)
+}
+
+
+void Parameters() : {}
+{
+    [Parameter()] ("," Parameter())*
+}
+
+void Parameter() : {}
+{
+    (Identifier() | <INT> | <BOOLEAN> | <FLOAT> | <STRING> ) Identifier()
+}
+
+void Value() #void : {}
+{
+    Integer()
+|
+    Identifier()
+|
+    Function_Call()
+}
+
+void Identifier() : {
+ Token t;
+}
+{
+    t=<IDENTIFIER>
+    {jjtThis.jjtSetValue(t.image);}
+}
+
+void Integer() :{
+ Token t;
+}
+{
+    t=<INTEGER_LITERAL>
+    {jjtThis.jjtSetValue(t.image);}
+}

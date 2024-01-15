@@ -1,0 +1,4 @@
+int test;
+test = 5+5;
+test();
+test(int test);
