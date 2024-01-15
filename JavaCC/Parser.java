@@ -5,26 +5,23 @@
 
 import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.io.InputStream;
 public class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstants {/*@bgen(jjtree)*/
   protected static JJTParserState jjtree = new JJTParserState();public static ASTStart root;
-  public static Parser parse;
   /** Main entry point. */
-
-  public static void Parse(InputStream input) {
+  public static void Parse() {
     System.out.println("Reading from standard input...");
     try {
-        parse = new Parser(input);
+        Parser t = new Parser(new FileInputStream("../code.txt"));
         //t.printAllTokens();
         try {
-          root = parse.Start();
-          //root.dump("");
+          root = t.Start();
+          root.dump("");
           System.out.println("Thank you.");
         } catch (Exception e) {
           System.out.println("Oops.");
           System.out.println(e.getMessage());
           e.printStackTrace();
-          parse.printAllTokens();
+          t.printAllTokens();
         }
     } catch (Exception e) {
         System.out.println("Oops.");
@@ -33,12 +30,12 @@ public class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConsta
     }
   }
 
-  public static void printAllTokens() throws ParseException {
+  public void printAllTokens() throws ParseException {
      Token t;
      int limit = 10;
      int count = 0;
      do {
-         t = parse.getNextToken();
+         t = this.getNextToken();
          System.out.println("Token: " + t.image + " Kind: " + t.kind + " Value:" + t.getValue() +
          " ToString: " + t.toString());
          count++;
@@ -394,15 +391,12 @@ public class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConsta
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case MUL:
           jj_consume_token(MUL);
-                   jjtn001.jjtSetValue("Mul");
           break;
         case DIV:
           jj_consume_token(DIV);
-                                                        jjtn001.jjtSetValue("Div");
           break;
         case MOD:
           jj_consume_token(MOD);
-                                                                                             jjtn001.jjtSetValue("Mod");
           break;
         default:
           jj_la1[7] = jj_gen;
@@ -611,21 +605,6 @@ public class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConsta
     finally { jj_save(0, xla); }
   }
 
-  static private boolean jj_3R_8() {
-    if (jj_scan_token(IDENTIFIER)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_1() {
-    if (jj_3R_6()) return true;
-    return false;
-  }
-
-  static private boolean jj_3R_7() {
-    if (jj_3R_8()) return true;
-    return false;
-  }
-
   static private boolean jj_3R_6() {
     Token xsp;
     xsp = jj_scanpos;
@@ -642,6 +621,21 @@ public class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConsta
     }
     }
     }
+    if (jj_3R_8()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_8() {
+    if (jj_scan_token(IDENTIFIER)) return true;
+    return false;
+  }
+
+  static private boolean jj_3_1() {
+    if (jj_3R_6()) return true;
+    return false;
+  }
+
+  static private boolean jj_3R_7() {
     if (jj_3R_8()) return true;
     return false;
   }

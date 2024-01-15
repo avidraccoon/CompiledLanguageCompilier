@@ -22,7 +22,7 @@ public class SimpleNode implements Node {
 
   public void jjtClose() {
   }
-
+  
   public void jjtSetParent(Node n) { parent = n; }
   public Node jjtGetParent() { return parent; }
 
@@ -64,10 +64,10 @@ public class SimpleNode implements Node {
     System.out.println(toString(prefix));
     if (children != null) {
       for (int i = 0; i < children.length; ++i) {
-        SimpleNode n = (SimpleNode)children[i];
-        if (n != null) {
-          n.dump(prefix + "  ");
-        }
+  SimpleNode n = (SimpleNode)children[i];
+  if (n != null) {
+    n.dump(prefix + "|");
+  }
       }
     }
   }

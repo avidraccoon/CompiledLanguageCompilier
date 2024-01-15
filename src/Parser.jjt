@@ -15,22 +15,23 @@ import java.util.ArrayList;
 import java.io.InputStream;
 public class Parser {
   public static ASTStart root;
+  public static Parser parse;
   /** Main entry point. */
 
   public static void Parse(InputStream input) {
     System.out.println("Reading from standard input...");
     try {
-        Parser t = new Parser(input);
+        parse = new Parser(input);
         //t.printAllTokens();
         try {
-          root = t.Start();
+          root = parse.Start();
           //root.dump("");
           System.out.println("Thank you.");
         } catch (Exception e) {
           System.out.println("Oops.");
           System.out.println(e.getMessage());
           e.printStackTrace();
-          t.printAllTokens();
+          parse.printAllTokens();
         }
     } catch (Exception e) {
         System.out.println("Oops.");
@@ -39,12 +40,12 @@ public class Parser {
     }
   }
 
-  public void printAllTokens() throws ParseException {
+  public static void printAllTokens() throws ParseException {
      Token t;
      int limit = 10;
      int count = 0;
      do {
-         t = this.getNextToken();
+         t = parse.getNextToken();
          System.out.println("Token: " + t.image + " Kind: " + t.kind + " Value:" + t.getValue() +
          " ToString: " + t.toString());
          count++;
@@ -232,7 +233,7 @@ void ArithmeticExpression() #void : {}
 
 void Term() #void : {}
 {
- (Factor() ((<MUL> | <DIV> | <MOD>) Factor())*)#MulDivMod
+ (Factor() ((<MUL>{jjtThis.jjtSetValue("Mul");} | <DIV>{jjtThis.jjtSetValue("Div");} | <MOD>{jjtThis.jjtSetValue("Mod");}) Factor())*)#MulDivMod
 }
 
 void Factor() #void : {}

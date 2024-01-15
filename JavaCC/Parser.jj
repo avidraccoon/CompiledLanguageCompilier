@@ -13,29 +13,26 @@ PARSER_BEGIN(Parser)
 
 import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.io.InputStream;
 public class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/ {/*@bgen(jjtree)*/
   protected static JJTParserState jjtree = new JJTParserState();
 
 /*@egen*/
   public static ASTStart root;
-  public static Parser parse;
   /** Main entry point. */
-
-  public static void Parse(InputStream input) {
+  public static void Parse() {
     System.out.println("Reading from standard input...");
     try {
-        parse = new Parser(input);
+        Parser t = new Parser(new FileInputStream("../code.txt"));
         //t.printAllTokens();
         try {
-          root = parse.Start();
-          //root.dump("");
+          root = t.Start();
+          root.dump("");
           System.out.println("Thank you.");
         } catch (Exception e) {
           System.out.println("Oops.");
           System.out.println(e.getMessage());
           e.printStackTrace();
-          parse.printAllTokens();
+          t.printAllTokens();
         }
     } catch (Exception e) {
         System.out.println("Oops.");
@@ -44,12 +41,12 @@ public class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/ {/*@
     }
   }
 
-  public static void printAllTokens() throws ParseException {
+  public void printAllTokens() throws ParseException {
      Token t;
      int limit = 10;
      int count = 0;
      do {
-         t = parse.getNextToken();
+         t = this.getNextToken();
          System.out.println("Token: " + t.image + " Kind: " + t.kind + " Value:" + t.getValue() +
          " ToString: " + t.toString());
          count++;
@@ -462,7 +459,7 @@ void Term()       : {}
  }
  try {
 /*@egen*/
- (Factor() ((<MUL>{jjtn001.jjtSetValue("Mul");} | <DIV>{jjtn001.jjtSetValue("Div");} | <MOD>{jjtn001.jjtSetValue("Mod");}) Factor())*)/*@bgen(jjtree)*/
+ (Factor() ((<MUL> | <DIV> | <MOD>) Factor())*)/*@bgen(jjtree)*/
  } catch (Throwable jjte001) {
    if (jjtc001) {
      jjtree.clearNodeScope(jjtn001);
